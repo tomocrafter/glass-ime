@@ -2,6 +2,7 @@ import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import { CursorAnchor } from './cursorAnchor.js';
 import { IM_PROPERTY_KEY, type ImEvent } from './kimpanel/protocol.js';
 import { KimpanelService } from './kimpanel/service.js';
 import { PanelState } from './panelState.js';
@@ -12,6 +13,7 @@ import { StatusButton } from './ui/statusButton.js';
 
 export default class GlassIme {
     private readonly state = new PanelState();
+    private readonly anchor = new CursorAnchor();
     private readonly service = new KimpanelService((event) => this.handle(event));
     private readonly indicator = new ModeIndicator();
     private readonly candidates = new CandidatePanel({
@@ -76,6 +78,9 @@ export default class GlassIme {
     private render(): void {
         const view = this.state.view();
         const cursor = spotToStageRect(this.state.spot);
+        const anchor = spotToStageRect(
+            this.anchor.resolve(this.state.spot, view.kind === 'candidates'),
+        );
 
         if (view.kind === 'indicator') {
             this.indicator.show(view.label, cursor);
@@ -84,7 +89,7 @@ export default class GlassIme {
         }
 
         if (view.kind === 'candidates') {
-            this.candidates.show(view, cursor);
+            this.candidates.show(view, anchor);
         } else {
             this.candidates.hide();
         }
