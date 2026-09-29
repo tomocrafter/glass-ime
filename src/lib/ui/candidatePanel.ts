@@ -54,12 +54,20 @@ export class CandidatePanel {
         }
 
         const [width, height] = this.size;
-        this.actor.moveResize(placeNearCursor(cursor, width, height));
+        this.actor.moveResize(placeNearCursor(cursor, width, height, this.textInset()));
         this.actor.popup();
     }
 
     hide(): void {
         this.actor.popdown();
+    }
+
+    /** Distance from the panel's left edge to the first candidate's text. */
+    private textInset(): number {
+        const padding = this.actor.box.get_theme_node().get_padding(St.Side.LEFT);
+        const row = this.rows.find((candidate) => candidate.actor.visible);
+
+        return padding + (row?.textOffset ?? 0);
     }
 
     private render(view: CandidatesView): void {

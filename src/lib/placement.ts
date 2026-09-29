@@ -43,14 +43,20 @@ export function spotToStageRect(spot: SpotRect): Mtk.Rectangle {
 }
 
 /**
- * Places a popup with its left edge at the cursor, below it or above it when
- * there is no room, keeping it on the cursor's monitor.
+ * Places a popup below the cursor, or above it when there is no room, keeping
+ * it on the cursor's monitor. `textInset` is how far the popup's text sits
+ * from its left edge; that text is what lines up with the cursor.
  */
-export function placeNearCursor(cursor: Mtk.Rectangle, width: number, height: number): Placement {
+export function placeNearCursor(
+    cursor: Mtk.Rectangle,
+    width: number,
+    height: number,
+    textInset = 0,
+): Placement {
     const index = global.display.get_monitor_index_for_rect(cursor);
     const monitor = Main.layoutManager.monitors[index] ?? Main.layoutManager.primaryMonitor;
 
-    let x = cursor.x;
+    let x = cursor.x - textInset;
     let y = cursor.y + cursor.height + GAP;
     let above = false;
 

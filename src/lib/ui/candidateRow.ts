@@ -36,6 +36,20 @@ export class CandidateRow {
         });
     }
 
+    /** Distance from the row's left edge to its candidate text. */
+    get textOffset(): number {
+        const node = this.actor.get_theme_node();
+        const padding = node.get_padding(St.Side.LEFT);
+
+        if (!this.label.visible) {
+            return padding;
+        }
+
+        const [, labelWidth] = this.label.get_preferred_width(-1);
+
+        return padding + labelWidth + node.get_length('spacing');
+    }
+
     update({ index, label, text }: Candidate, selected: boolean): void {
         this.index = index;
         setText(this.label, label);
