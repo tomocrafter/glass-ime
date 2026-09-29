@@ -45,6 +45,8 @@ export class GlassPanel extends St.Widget {
             layout_manager: new Clutter.BinLayout(),
             visible: false,
             opacity: 0,
+            // Fade the composited panel as one image, not each layer on its own.
+            offscreen_redirect: Clutter.OffscreenRedirect.AUTOMATIC_FOR_OPACITY,
             reactive: true,
         });
 
