@@ -23,7 +23,7 @@ const DEFAULT_SHADOWS: ShadowLayer[] = [
     { blur: 10, offsetY: 6, opacity: 0.2 },
 ];
 
-const RESIZE_MS = 110;
+const RESIZE_MS = 80;
 const SHOW_MS = 140;
 const HIDE_MS = 120;
 /** fcitx5 often hides and reshows the panel between keystrokes; don't flicker. */
