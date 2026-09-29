@@ -1,0 +1,46 @@
+{
+    "name": "glass-ime",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "tsc && cp metadata.json stylesheet.css dist/",
+        "check": "tsc --noEmit && tsc -p tools --noEmit && oxlint && oxfmt --check",
+        "lint": "oxlint",
+        "format": "oxfmt",
+        "reload": "gnome-extensions disable glass-ime@tomo && gnome-extensions enable glass-ime@tomo",
+        "capture": "tsc -p tools && gjs -m build/tools/capture/main.js"
+    },
+    "devDependencies": {
+        "@girs/gdk-3.0": "3.24.43-4.0.0-beta.15",
+        "@girs/gnome-shell": "46.0.2",
+        "@girs/gtk-3.0": "3.24.43-4.0.0-beta.15",
+        "oxfmt": "^0.71.0",
+        "oxlint": "^1.86.0",
+        "typescript": "^7.0.2"
+    },
+    "overrides": {
+        "@girs/atk-1.0": "2.52.0-4.0.0-beta.15",
+        "@girs/cairo-1.0": "1.0.0-4.0.0-beta.15",
+        "@girs/freetype2-2.0": "2.0.0-4.0.0-beta.15",
+        "@girs/gck-2": "4.3.0-4.0.0-beta.15",
+        "@girs/gcr-4": "4.3.0-4.0.0-beta.15",
+        "@girs/gdesktopenums-3.0": "3.0.0-4.0.0-beta.15",
+        "@girs/gdk-3.0": "3.24.43-4.0.0-beta.15",
+        "@girs/gdk-4.0": "4.0.0-4.0.0-beta.15",
+        "@girs/gdkpixbuf-2.0": "2.0.0-4.0.0-beta.15",
+        "@girs/gio-2.0": "2.80.3-4.0.0-beta.15",
+        "@girs/gjs": "4.0.0-beta.15",
+        "@girs/gl-1.0": "1.0.0-4.0.0-beta.15",
+        "@girs/glib-2.0": "2.80.3-4.0.0-beta.15",
+        "@girs/gmodule-2.0": "2.0.0-4.0.0-beta.15",
+        "@girs/gobject-2.0": "2.80.3-4.0.0-beta.15",
+        "@girs/graphene-1.0": "1.0.0-4.0.0-beta.15",
+        "@girs/gsk-4.0": "4.0.0-4.0.0-beta.15",
+        "@girs/gtk-3.0": "3.24.43-4.0.0-beta.15",
+        "@girs/gtk-4.0": "4.14.5-4.0.0-beta.15",
+        "@girs/harfbuzz-0.0": "8.5.0-4.0.0-beta.15",
+        "@girs/pango-1.0": "1.54.0-4.0.0-beta.15",
+        "@girs/pangocairo-1.0": "1.0.0-4.0.0-beta.15",
+        "@girs/xlib-2.0": "2.0.0-4.0.0-beta.15"
+    }
+}
