@@ -110,6 +110,13 @@ export class GlassPanel extends St.Widget {
     }
 
     get naturalSize(): [number, number] {
+        // Text measures a few pixels narrower until it is mapped, so map the
+        // panel (still transparent) before measuring.
+        if (!this.visible) {
+            this.opacity = 0;
+            this.show();
+        }
+
         this.box.set_size(-1, -1);
         const [, , width, height] = this.box.get_preferred_size();
 
@@ -173,7 +180,7 @@ export class GlassPanel extends St.Widget {
         this.remove_transition('opacity');
         this.remove_transition('translation-y');
 
-        if (!this.visible) {
+        if (!this.visible || this.opacity === 0) {
             this.opacity = 0;
             this.translation_y = 4;
         }
