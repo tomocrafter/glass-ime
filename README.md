@@ -87,7 +87,7 @@ GJS caches modules for the lifetime of GNOME Shell, so `extension.ts` imports a 
 
 `bun run capture` replays scripted scenes against the running extension and rewrites the banner, screenshots and demo GIF in `docs/`. Pass scene names to record only some of them, e.g. `bun run capture demo`. Scenes live in [`tools/capture/scenes.ts`](tools/capture/scenes.ts).
 
-It currently needs an X11 GNOME session (GNOME 49 or earlier) with the extension enabled, the Noto Sans CJK JP font and `ffmpeg`. A window appears in the middle of the primary monitor while it records; don't type until it finishes, or real fcitx5 updates will mix into the scenes.
+It needs a GNOME session with the extension enabled, the Noto Sans CJK JP font, the GStreamer PipeWire plugin and `ffmpeg`. The scenes are recorded through Mutter's ScreenCast API, and the stage window runs on XWayland so that it can be placed on screen. A window appears in the middle of the primary monitor while it records; don't type until it finishes, or real fcitx5 updates will mix into the scenes.
 
 ## License
 

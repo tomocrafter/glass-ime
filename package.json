@@ -8,11 +8,12 @@
         "lint": "oxlint",
         "format": "oxfmt",
         "reload": "gnome-extensions disable glass-ime@tomo && sleep 1 && gnome-extensions enable glass-ime@tomo",
-        "capture": "tsc -p tools && gjs -m build/tools/capture/main.js"
+        "capture": "tsc -p tools && GDK_BACKEND=x11 gjs -m build/tools/capture/main.js"
     },
     "devDependencies": {
         "@girs/gdk-3.0": "4.9.0",
         "@girs/gnome-shell": "50.0.4",
+        "@girs/gst-1.0": "4.9.0",
         "@girs/gtk-3.0": "4.9.0",
         "oxfmt": "^0.71.0",
         "oxlint": "^1.86.0",

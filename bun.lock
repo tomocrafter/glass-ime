@@ -7,6 +7,7 @@
       "devDependencies": {
         "@girs/gdk-3.0": "4.9.0",
         "@girs/gnome-shell": "50.0.4",
+        "@girs/gst-1.0": "4.9.0",
         "@girs/gtk-3.0": "4.9.0",
         "oxfmt": "^0.71.0",
         "oxlint": "^1.86.0",
@@ -68,6 +69,8 @@
     "@girs/graphene-1.0": ["@girs/graphene-1.0@4.9.0", "", { "dependencies": { "@girs/gjs": "^4.9.0", "@girs/glib-2.0": "^4.9.0", "@girs/gobject-2.0": "^4.9.0" } }, "sha512-8XPKRlHPzUjXekxAzEWUWwcfC5mwEw2WCpzZ7es1rUCRFB8tjSZWGxqMErHN9hLft7Yd5rtXq8DlUrcmLW/PSg=="],
 
     "@girs/gsk-4.0": ["@girs/gsk-4.0@4.9.0", "", { "dependencies": { "@girs/cairo-1.0": "^4.9.0", "@girs/freetype2-2.0": "^4.9.0", "@girs/gdk-4.0": "^4.9.0", "@girs/gdkpixbuf-2.0": "^4.9.0", "@girs/gio-2.0": "^4.9.0", "@girs/gjs": "^4.9.0", "@girs/glib-2.0": "^4.9.0", "@girs/gmodule-2.0": "^4.9.0", "@girs/gobject-2.0": "^4.9.0", "@girs/graphene-1.0": "^4.9.0", "@girs/harfbuzz-0.0": "^4.9.0", "@girs/pango-1.0": "^4.9.0", "@girs/pangocairo-1.0": "^4.9.0" } }, "sha512-UJyrz2OHu2Fu2fbdo9oq4zyIp8XApKWlXfevLxkWndO/xTRL89WDJBzbh7AzdaDXE9MFbaZwdAla5jQ07wAD/g=="],
+
+    "@girs/gst-1.0": ["@girs/gst-1.0@4.9.0", "", { "dependencies": { "@girs/gjs": "^4.9.0", "@girs/glib-2.0": "^4.9.0", "@girs/gmodule-2.0": "^4.9.0", "@girs/gobject-2.0": "^4.9.0" } }, "sha512-pv8PQ+YxxLeksq4spq48tBjIBRO7tubCHLWCDZRJ8CeBPf70zs5dR6JJFW/N7tPfgYZEfZJRRbu7wjqbs0y7xA=="],
 
     "@girs/gtk-3.0": ["@girs/gtk-3.0@4.9.0", "", { "dependencies": { "@girs/atk-1.0": "^4.9.0", "@girs/cairo-1.0": "^4.9.0", "@girs/freetype2-2.0": "^4.9.0", "@girs/gdk-3.0": "^4.9.0", "@girs/gdkpixbuf-2.0": "^4.9.0", "@girs/gio-2.0": "^4.9.0", "@girs/gjs": "^4.9.0", "@girs/glib-2.0": "^4.9.0", "@girs/gmodule-2.0": "^4.9.0", "@girs/gobject-2.0": "^4.9.0", "@girs/harfbuzz-0.0": "^4.9.0", "@girs/pango-1.0": "^4.9.0", "@girs/xlib-2.0": "^4.9.0" } }, "sha512-f1nVwYrcyo2jJrKk6ZXcghiiEBYdE4vz0zYjMNFz20d6aMvjLKFZ2RbOeYGlWq6xtBSlSc4MzQxdrGM3/20opA=="],
 

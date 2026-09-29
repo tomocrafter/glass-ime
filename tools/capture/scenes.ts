@@ -3,7 +3,7 @@ import type Cairo from 'cairo';
 import { Editor } from './editor.js';
 import { FakeFcitx, type Rect } from './fakeFcitx.js';
 import { createText, drawText, paintPastel } from './painting.js';
-import { Recorder, encodeGif, grab, savePng, sleep } from './recorder.js';
+import { ScreenRecorder, encodeGif, screenshot, sleep } from './recorder.js';
 import { Stage } from './stage.js';
 
 export type Scene = (outDir: string) => Promise<void>;
@@ -102,7 +102,7 @@ const banner: Scene = (outDir) =>
         fcitx.showCandidates(CONVERSION, { cursor: 0, note: NOTE });
         await sleep(SETTLE_MS);
 
-        savePng(grab(stage.bounds), `${outDir}/banner.png`);
+        await screenshot(stage.bounds, `${outDir}/banner.png`);
     });
 
 const candidates: Scene = (outDir) =>
@@ -111,7 +111,7 @@ const candidates: Scene = (outDir) =>
         fcitx.showCandidates(CAFE, { cursor: 1 });
         await sleep(SETTLE_MS);
 
-        savePng(grab(stage.bounds), `${outDir}/candidates.png`);
+        await screenshot(stage.bounds, `${outDir}/candidates.png`);
     });
 
 const indicator: Scene = (outDir) =>
@@ -120,12 +120,11 @@ const indicator: Scene = (outDir) =>
         fcitx.announceMode('あ');
         await sleep(SETTLE_MS);
 
-        savePng(grab(around(stage, editor.caret, 400, 150)), `${outDir}/indicator.png`);
+        await screenshot(around(stage, editor.caret, 400, 150), `${outDir}/indicator.png`);
     });
 
 const demo: Scene = (outDir) =>
     onEditor(async (stage, editor) => {
-        const recorder = new Recorder(stage.bounds);
         const steps: [number, () => unknown][] = [
             [600, () => type(stage, editor, 'か', ['か', '課', '家', '化'])],
             [380, () => type(stage, editor, 'かふ', ['カフェ', 'かふ'])],
@@ -143,15 +142,14 @@ const demo: Scene = (outDir) =>
             [700, () => undefined],
         ];
 
-        recorder.start();
+        const recorder = await ScreenRecorder.start(stage.bounds);
 
         for (const [delay, step] of steps) {
             await sleep(delay);
             await step();
         }
 
-        const { frames, fps } = recorder.stop();
-        encodeGif(frames, fps, 720, `${outDir}/demo.gif`);
+        encodeGif(recorder.stop(), 720, `${outDir}/demo.gif`);
     });
 
 export const SCENES: Record<string, Scene> = { banner, candidates, indicator, demo };

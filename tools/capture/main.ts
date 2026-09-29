@@ -9,7 +9,8 @@ import { SCENES } from './scenes.js';
  *
  *     bun run capture [scene...]
  *
- * Needs an X11 GNOME session with glass-ime enabled. Don't type while it runs.
+ * Needs a GNOME session with glass-ime enabled. The stage runs on XWayland so
+ * that it can be placed on screen. Don't type while it runs.
  */
 async function main(names: string[]): Promise<void> {
     const outDir = GLib.build_filenamev([GLib.get_current_dir(), 'docs']);
