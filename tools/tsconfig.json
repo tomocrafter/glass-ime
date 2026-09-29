@@ -1,0 +1,17 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "outDir": "../build/tools",
+        "types": [
+            "@girs/gjs",
+            "@girs/gjs/dom",
+            "@girs/gtk-3.0",
+            "@girs/gdk-3.0",
+            "@girs/pango-1.0",
+            "@girs/pangocairo-1.0",
+            "@girs/gdkpixbuf-2.0"
+        ]
+    },
+    "include": ["."]
+}
