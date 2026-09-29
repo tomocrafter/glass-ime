@@ -7,7 +7,7 @@
         "check": "tsc --noEmit && tsc -p tools --noEmit && oxlint && oxfmt --check",
         "lint": "oxlint",
         "format": "oxfmt",
-        "reload": "gnome-extensions disable glass-ime@tomo && gnome-extensions enable glass-ime@tomo",
+        "reload": "gnome-extensions disable glass-ime@tomo && sleep 1 && gnome-extensions enable glass-ime@tomo",
         "capture": "tsc -p tools && gjs -m build/tools/capture/main.js"
     },
     "devDependencies": {

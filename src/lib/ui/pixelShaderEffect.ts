@@ -53,7 +53,7 @@ export class PixelShaderEffect extends Clutter.ShaderEffect {
     }
 
     constructor(source: string) {
-        super({ shader_type: Clutter.ShaderType.FRAGMENT_SHADER });
+        super();
         this.set_shader_source(PRELUDE + source);
         this.setFloat('padding', TEXTURE_PADDING);
         this.setRect({ x: 0, y: 0, width: 1, height: 1 });

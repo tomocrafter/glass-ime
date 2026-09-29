@@ -48,7 +48,7 @@ export class GlassPanel extends St.Widget {
 
     readonly box = new St.BoxLayout({
         style_class: 'glass-ime-content',
-        vertical: true,
+        orientation: Clutter.Orientation.VERTICAL,
         reactive: true,
     });
     private readonly backdrop: Backdrop;
@@ -104,10 +104,9 @@ export class GlassPanel extends St.Widget {
         });
     }
 
-    /** Adds the panel to the shell, taking input only on the glass. */
+    /** Adds the panel to the shell. Only its reactive content takes clicks; the rest passes through. */
     addToShell(): void {
-        Main.layoutManager.addTopChrome(this, { affectsInputRegion: false });
-        Main.layoutManager.trackChrome(this.surface, { affectsInputRegion: true });
+        Main.layoutManager.addTopChrome(this);
     }
 
     get naturalSize(): [number, number] {

@@ -20,7 +20,7 @@ export interface CandidatePanelActions {
 export class CandidatePanel {
     readonly actor = new GlassPanel({ styleClass: 'glass-ime-candidates' });
     private readonly preedit = new St.Label({ style_class: 'glass-ime-preedit' });
-    private readonly notes = new St.BoxLayout({ vertical: true });
+    private readonly notes = new St.BoxLayout({ orientation: Clutter.Orientation.VERTICAL });
     private readonly list = new St.BoxLayout({ style_class: 'glass-ime-list' });
     private readonly rows: CandidateRow[] = [];
     private renderedView = '';
@@ -76,7 +76,9 @@ export class CandidatePanel {
 
         this.renderNotes(view.notes);
 
-        this.list.vertical = !view.horizontal;
+        this.list.orientation = view.horizontal
+            ? Clutter.Orientation.HORIZONTAL
+            : Clutter.Orientation.VERTICAL;
         if (view.horizontal) {
             this.list.add_style_class_name('horizontal');
         } else {

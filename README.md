@@ -24,7 +24,7 @@ GNOME Shell's background blur cannot be clipped to rounded corners. The extensio
 
 ## Requirements
 
-- GNOME Shell 46 (tested on Ubuntu 24.04 with X11)
+- GNOME Shell 50 (tested on Ubuntu 26.04 with Wayland)
 - fcitx5 with the kimpanel addon (part of `fcitx5-modules` on Debian and Ubuntu)
 - [Bun](https://bun.sh) to build
 
@@ -38,7 +38,7 @@ bun run build
 ln -s "$PWD/dist" ~/.local/share/gnome-shell/extensions/glass-ime@tomo
 ```
 
-Restart GNOME Shell (X11: <kbd>Alt</kbd>+<kbd>F2</kbd>, `r`; Wayland: log out and back in), then enable the extension:
+Log out and back in so that GNOME Shell picks up the new extension, then enable it:
 
 ```sh
 gnome-extensions enable glass-ime@tomo
@@ -87,7 +87,7 @@ GJS caches modules for the lifetime of GNOME Shell, so `extension.ts` imports a 
 
 `bun run capture` replays scripted scenes against the running extension and rewrites the banner, screenshots and demo GIF in `docs/`. Pass scene names to record only some of them, e.g. `bun run capture demo`. Scenes live in [`tools/capture/scenes.ts`](tools/capture/scenes.ts).
 
-It needs an X11 GNOME session with the extension enabled, the Noto Sans CJK JP font and `ffmpeg`. A window appears in the middle of the primary monitor while it records; don't type until it finishes, or real fcitx5 updates will mix into the scenes.
+It currently needs an X11 GNOME session (GNOME 49 or earlier) with the extension enabled, the Noto Sans CJK JP font and `ffmpeg`. A window appears in the middle of the primary monitor while it records; don't type until it finishes, or real fcitx5 updates will mix into the scenes.
 
 ## License
 
