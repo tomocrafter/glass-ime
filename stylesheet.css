@@ -87,3 +87,19 @@
     min-width: 18px;
     text-align: center;
 }
+
+.glass-ime-description {
+    font-size: 10pt;
+}
+.glass-ime-description .glass-ime-content {
+    padding: 10px 14px;
+    spacing: 4px;
+}
+.glass-ime-description-title {
+    font-weight: bold;
+    color: #ffffff;
+}
+.glass-ime-description-body {
+    max-width: 280px;
+    color: rgba(255, 255, 255, 0.82);
+}

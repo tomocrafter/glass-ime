@@ -13,11 +13,18 @@ export interface Candidate {
     text: string;
 }
 
+/** A dictionary entry mozc attaches to the selected candidate. */
+export interface Description {
+    title: string;
+    body: string;
+}
+
 export interface CandidatesView {
     kind: 'candidates';
     preedit: string | null;
     notes: string[];
     candidates: Candidate[];
+    description: Description | null;
     cursor: number;
     horizontal: boolean;
 }
@@ -113,20 +120,45 @@ export class PanelState {
 }
 
 /** fcitx5 sends its auxDown text as an unlabeled row among labeled candidates. */
-function splitNotes(table: LookupTable, aux: string): Pick<CandidatesView, 'notes' | 'candidates'> {
+/**
+ * fcitx5 sends its auxDown text as an unlabeled row among labeled candidates,
+ * and mozc appends a dictionary entry to the selected candidate's text as
+ * extra lines: the headword, then its meaning.
+ */
+function splitNotes(
+    table: LookupTable,
+    aux: string,
+): Pick<CandidatesView, 'notes' | 'candidates' | 'description'> {
     const labeled = table.labels.some((label) => label !== '');
     const notes = aux ? [aux] : [];
     const candidates: Candidate[] = [];
+    let description: Description | null = null;
 
     table.texts.forEach((text, index) => {
         const label = table.labels[index] ?? '';
 
         if (labeled && label === '') {
             notes.push(text);
-        } else {
-            candidates.push({ index, label: label.replace(/[.:]\s*$/, ''), text });
+            return;
+        }
+
+        const [first = '', ...extra] = text.split('\n');
+        candidates.push({ index, label: label.replace(/[.:]\s*$/, ''), text: first });
+
+        if (extra.length > 0) {
+            description = toDescription(extra);
         }
     });
 
-    return { notes, candidates };
+    return { notes, candidates, description };
+}
+
+function toDescription(lines: string[]): Description {
+    if (lines.length === 1) {
+        return { title: '', body: lines[0] ?? '' };
+    }
+
+    const [title = '', ...body] = lines;
+
+    return { title, body: body.join('\n') };
 }

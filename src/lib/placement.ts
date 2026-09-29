@@ -74,6 +74,32 @@ export function placeNearCursor(
     return { x: Math.round(x), y: Math.round(y), width, height, above };
 }
 
+/**
+ * Places a popup beside another one, on its right or on its left when there
+ * is no room, top-aligned and kept on the same monitor.
+ */
+export function placeBeside(neighbor: Rect, width: number, height: number): Placement {
+    const { x: left, y: top, width: neighborWidth, height: neighborHeight } = neighbor;
+    const index = global.display.get_monitor_index_for_rect(
+        new Mtk.Rectangle({ x: left, y: top, width: neighborWidth, height: neighborHeight }),
+    );
+    const monitor = Main.layoutManager.monitors[index] ?? Main.layoutManager.primaryMonitor;
+
+    let x = neighbor.x + neighbor.width + GAP;
+    let y = neighbor.y;
+
+    if (monitor) {
+        if (x + width > monitor.x + monitor.width - SCREEN_MARGIN) {
+            x = neighbor.x - width - GAP;
+        }
+
+        const maxY = monitor.y + monitor.height - height - SCREEN_MARGIN;
+        y = Math.max(monitor.y + SCREEN_MARGIN, Math.min(y, maxY));
+    }
+
+    return { x: Math.round(x), y: Math.round(y), width, height, above: false };
+}
+
 function shellScale(): number {
     const stage = global.stage;
 

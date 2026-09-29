@@ -8,6 +8,7 @@ import { KimpanelService } from './kimpanel/service.js';
 import { PanelState } from './panelState.js';
 import { spotToStageRect } from './placement.js';
 import { CandidatePanel } from './ui/candidatePanel.js';
+import { DescriptionPanel } from './ui/descriptionPanel.js';
 import { ModeIndicator } from './ui/modeIndicator.js';
 import { StatusButton } from './ui/statusButton.js';
 
@@ -16,6 +17,7 @@ export default class GlassIme {
     private readonly anchor = new CursorAnchor();
     private readonly service: KimpanelService;
     private readonly indicator = new ModeIndicator();
+    private readonly description = new DescriptionPanel();
     private readonly candidates = new CandidatePanel({
         select: (index) => this.service.selectCandidate(index),
         pageUp: () => this.service.pageUp(),
@@ -31,6 +33,7 @@ export default class GlassIme {
     constructor(uuid: string) {
         this.candidates.actor.addToShell();
         this.indicator.actor.addToShell();
+        this.description.actor.addToShell();
         Main.panel.addToStatusArea(uuid, this.status.button);
 
         // Take over from fcitx5's own UI only once ours is ready.
@@ -55,6 +58,7 @@ export default class GlassIme {
         this.status.destroy();
         this.candidates.actor.destroy();
         this.indicator.actor.destroy();
+        this.description.actor.destroy();
     }
 
     private handle(event: ImEvent): void {
@@ -103,9 +107,16 @@ export default class GlassIme {
         }
 
         if (view.kind === 'candidates') {
-            this.candidates.show(view, anchor);
+            const placement = this.candidates.show(view, anchor);
+
+            if (view.description) {
+                this.description.show(view.description, placement);
+            } else {
+                this.description.hide();
+            }
         } else {
             this.candidates.hide();
+            this.description.hide();
         }
     }
 }

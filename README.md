@@ -10,6 +10,8 @@ A GNOME Shell extension that draws the fcitx5 candidate window and the input met
 
   <img src="docs/candidates.png" alt="Candidate window over a document" width="640">
 
+- **Dictionary panel**: when mozc has a dictionary entry for the selected candidate (「直りました」 → 直る), its meaning appears in a glass panel beside the candidate window, as on macOS.
+
 - **Input mode indicator**: a small `A` / `あ` badge appears under the cursor when you switch input methods, e.g. with the Zenkaku/Hankaku key.
 
   <img src="docs/indicator.png" alt="The あ badge under the cursor" width="320">

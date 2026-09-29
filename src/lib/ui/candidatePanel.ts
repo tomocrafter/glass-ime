@@ -3,7 +3,7 @@ import type Mtk from 'gi://Mtk';
 import St from 'gi://St';
 
 import type { CandidatesView } from '../panelState.js';
-import { placeNearCursor } from '../placement.js';
+import { type Placement, placeNearCursor } from '../placement.js';
 import { CandidateRow, setText } from './candidateRow.js';
 import { GlassPanel } from './glassPanel.js';
 
@@ -44,7 +44,8 @@ export class CandidatePanel {
         });
     }
 
-    show(view: CandidatesView, cursor: Mtk.Rectangle): void {
+    /** Shows the candidates near the cursor and returns where the panel went. */
+    show(view: CandidatesView, cursor: Mtk.Rectangle): Placement {
         const key = JSON.stringify(view);
 
         if (key !== this.renderedView) {
@@ -54,8 +55,11 @@ export class CandidatePanel {
         }
 
         const [width, height] = this.size;
-        this.actor.moveResize(placeNearCursor(cursor, width, height, this.textInset()));
+        const placement = placeNearCursor(cursor, width, height, this.textInset());
+        this.actor.moveResize(placement);
         this.actor.popup();
+
+        return placement;
     }
 
     hide(): void {
