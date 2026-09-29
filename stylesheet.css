@@ -71,9 +71,11 @@
 }
 
 .glass-ime-indicator .glass-ime-content {
-    padding: 3px 12px;
+    padding: 4px 7px;
 }
+/* Fixed width so that "A" and "あ" give the same badge size. */
 .glass-ime-indicator-text {
+    min-width: 16px;
     font-size: 11pt;
     font-weight: 600;
     color: #ffffff;
