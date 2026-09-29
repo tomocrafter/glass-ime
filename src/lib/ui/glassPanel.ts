@@ -6,6 +6,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { Backdrop, DetachedLayer } from './backdrop.js';
 import { DropShadow, type ShadowLayer } from './dropShadow.js';
+import { type Rect, sameRect, union } from './geometry.js';
 import { uniqueTypeName } from './typeName.js';
 
 export interface GlassPanelOptions {
@@ -28,12 +29,15 @@ const HIDE_MS = 120;
 /** fcitx5 often hides and reshows the panel between keystrokes; don't flicker. */
 const HIDE_DELAY_MS = 60;
 
+const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
+
 /**
- * A frosted-glass popup: drop shadow, blurred backdrop, tinted surface and
- * content. The actor reserves a margin for the shadow around the glass, so
- * positions and sizes given to it describe the glass alone.
+ * A frosted-glass popup: drop shadow, blurred backdrop, tinted surface and content.
  *
- * Its height animates between sizes, while the width follows immediately so
+ * The layers cover a canvas that holds every position of the panel during an
+ * animation, with a margin for the shadow. Animating the panel only moves it
+ * within the canvas, so the blur and the shadows keep their cached textures.
+ * The height animates between sizes, while the width follows immediately so
  * that the content is never squeezed.
  */
 export class GlassPanel extends St.Widget {
@@ -48,12 +52,18 @@ export class GlassPanel extends St.Widget {
     });
     private readonly backdrop: Backdrop;
     private readonly surface: St.Widget;
+    private readonly contentLayer = new DetachedLayer();
     private readonly shadows: DropShadow[];
     private readonly margin: number;
+    /** Stage rectangle the layers cover, or null once the clones are released. */
+    private canvas: Rect | null = null;
+    /** Stage rectangle of the panel as currently drawn. */
+    private panel: Rect = { x: 0, y: 0, width: 0, height: 0 };
+    /** Where the panel is heading, while animating. */
+    private target: Rect | null = null;
+    private resize: Clutter.Timeline | null = null;
     private shown = false;
     private hideTimeoutId = 0;
-    /** Where the vertical animation is heading, to avoid restarting it with the same target. */
-    private target = { y: 0, height: 0 };
 
     constructor({
         styleClass,
@@ -64,7 +74,6 @@ export class GlassPanel extends St.Widget {
     }: GlassPanelOptions) {
         super({
             style_class: `glass-ime-panel ${styleClass}`,
-            layout_manager: new Clutter.BinLayout(),
             visible: false,
             opacity: 0,
             // Fade the composited panel as one image, not each layer on its own.
@@ -73,33 +82,25 @@ export class GlassPanel extends St.Widget {
 
         this.shadows = shadows.map((shadow) => new DropShadow(radius, shadow));
         this.margin = Math.max(0, ...this.shadows.map((shadow) => shadow.spread));
-
-        const shadowLayer = new DetachedLayer({ x_expand: true, y_expand: true });
-        for (const shadow of this.shadows) {
-            shadowLayer.add_child(shadow);
-        }
-
         this.backdrop = new Backdrop(radius, blurRadius, saturation);
         this.surface = new St.Widget({
             style_class: 'glass-ime-surface',
             style: `border-radius: ${radius}px;`,
         });
 
-        const content = new DetachedLayer({ clip_to_allocation: true });
-        content.add_child(this.box);
-
-        this.add_child(shadowLayer);
-
-        for (const glass of [this.backdrop, this.surface, content]) {
-            this.inset(glass);
-            this.add_child(glass);
+        for (const shadow of this.shadows) {
+            this.add_child(shadow);
         }
 
-        this.connect('notify::size', () => this.fitShadows());
-        this.connect('notify::position', () =>
-            this.backdrop.followPanel(this.x + this.margin, this.y + this.margin),
-        );
-        this.connect('destroy', () => this.cancelHide());
+        this.contentLayer.add_child(this.box);
+        this.add_child(this.backdrop);
+        this.add_child(this.surface);
+        this.add_child(this.contentLayer);
+
+        this.connect('destroy', () => {
+            this.cancelHide();
+            this.stopResize();
+        });
     }
 
     /** Adds the panel to the shell, taking input only on the glass. */
@@ -115,45 +116,51 @@ export class GlassPanel extends St.Widget {
         return [Math.ceil(width), Math.ceil(height)];
     }
 
-    /** Places the glass at (x, y) with the given size. */
+    /** Places the panel at the given stage rectangle. */
     moveResize(x: number, y: number, width: number, height: number): void {
-        const animate = this.shown && this.visible;
-        const glassTop = this.y + this.margin;
-        const glassBottom = this.y + this.height - this.margin;
+        const next: Rect = { x, y, width, height };
 
-        this.box.set_size(width, height);
-        this.backdrop.capture({
-            x1: x,
-            y1: animate ? Math.min(y, glassTop) : y,
-            x2: x + width,
-            y2: animate ? Math.max(y + height, glassBottom) : y + height,
-        });
-
-        const outerY = y - this.margin;
-        const outerHeight = height + 2 * this.margin;
-
-        this.x = x - this.margin;
-        this.width = width + 2 * this.margin;
-
-        if (animate && outerY === this.target.y && outerHeight === this.target.height) {
+        if (this.canvas && sameRect(next, this.target ?? this.panel)) {
             return;
         }
 
-        this.target = { y: outerY, height: outerHeight };
-        this.remove_transition('y');
-        this.remove_transition('height');
+        this.stopResize();
+        this.box.set_size(width, height);
 
-        if (animate) {
-            this.ease({
-                y: outerY,
-                height: outerHeight,
-                duration: RESIZE_MS,
-                mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
-            });
-        } else {
-            this.y = outerY;
-            this.height = outerHeight;
+        const from: Rect = { ...this.panel, x, width };
+        const animate =
+            this.shown && this.visible && (from.y !== next.y || from.height !== next.height);
+
+        if (!animate) {
+            this.setCanvas(next);
+            this.showPanel(next);
+
+            return;
         }
+
+        this.setCanvas(union(from, next));
+        this.target = next;
+        this.resize = new Clutter.Timeline({
+            actor: this,
+            duration: RESIZE_MS,
+            progress_mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
+        });
+        this.resize.connect('new-frame', (timeline: Clutter.Timeline) => {
+            const progress = timeline.get_progress();
+
+            this.showPanel({
+                ...next,
+                y: lerp(from.y, next.y, progress),
+                height: lerp(from.height, next.height, progress),
+            });
+        });
+        this.resize.connect('completed', () => {
+            this.resize = null;
+            this.target = null;
+            this.setCanvas(next);
+            this.showPanel(next);
+        });
+        this.resize.start();
     }
 
     popup(): void {
@@ -196,6 +203,7 @@ export class GlassPanel extends St.Widget {
                     if (!this.shown) {
                         this.hide();
                         this.backdrop.release();
+                        this.canvas = null;
                     }
                 },
             });
@@ -204,20 +212,55 @@ export class GlassPanel extends St.Widget {
         });
     }
 
-    /** St resets actor margins from CSS on every style change, so inset through CSS. */
-    private inset(actor: St.Widget): void {
-        actor.x_expand = true;
-        actor.y_expand = true;
-        actor.style = `${actor.style ?? ''} margin: ${this.margin}px;`;
-    }
+    /** Sizes every layer to cover the given stage rectangle. */
+    private setCanvas(canvas: Rect): void {
+        if (this.canvas && sameRect(canvas, this.canvas)) {
+            return;
+        }
 
-    private fitShadows(): void {
-        const width = this.width - 2 * this.margin;
-        const height = this.height - 2 * this.margin;
+        const inner: Rect = {
+            x: this.margin,
+            y: this.margin,
+            width: canvas.width,
+            height: canvas.height,
+        };
+
+        this.canvas = canvas;
+        this.set_position(canvas.x - this.margin, canvas.y - this.margin);
+        this.set_size(canvas.width + 2 * this.margin, canvas.height + 2 * this.margin);
 
         for (const shadow of this.shadows) {
-            shadow.fit(this.margin, this.margin, width, height);
+            shadow.setCanvas(inner);
         }
+
+        this.backdrop.set_position(inner.x, inner.y);
+        this.backdrop.setCanvas(canvas);
+        this.contentLayer.set_position(inner.x, inner.y);
+        this.contentLayer.set_size(inner.width, inner.height);
+    }
+
+    /** Draws the panel at the given stage rectangle, which lies within the canvas. */
+    private showPanel(panel: Rect): void {
+        const canvas = this.canvas ?? panel;
+        const local: Rect = { ...panel, x: panel.x - canvas.x, y: panel.y - canvas.y };
+
+        this.panel = panel;
+
+        for (const shadow of this.shadows) {
+            shadow.setPanel(local);
+        }
+
+        this.backdrop.setPanel(local);
+        this.surface.set_position(this.margin + local.x, this.margin + local.y);
+        this.surface.set_size(local.width, local.height);
+        this.box.set_position(local.x, local.y);
+        this.contentLayer.set_clip(local.x, local.y, local.width, local.height);
+    }
+
+    private stopResize(): void {
+        this.resize?.stop();
+        this.resize = null;
+        this.target = null;
     }
 
     private cancelHide(): void {

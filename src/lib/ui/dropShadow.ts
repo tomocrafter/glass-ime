@@ -1,6 +1,7 @@
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
+import type { Rect } from './geometry.js';
 import { PixelShaderEffect } from './pixelShaderEffect.js';
 import { uniqueTypeName } from './typeName.js';
 
@@ -12,7 +13,6 @@ export interface ShadowLayer {
 }
 
 const SHADER = `
-uniform float extent;
 uniform float radius;
 uniform float blur;
 uniform float offset_y;
@@ -28,14 +28,12 @@ float erf(float x) {
 
 void main(void) {
     vec2 position = actor_position();
-    vec2 panel = actor_size() - vec2(2.0 * extent);
-    vec2 center = actor_size() * 0.5;
 
-    float shadow = rounded_rect_distance(position, center + vec2(0.0, offset_y), panel, radius);
+    float shadow = rect_distance(position, vec2(0.0, offset_y), radius);
     float alpha = opacity * 0.5 * (1.0 - erf(shadow / (blur * 1.41421356)));
 
     // Nothing under the panel itself, so its antialiased edge stays clean.
-    alpha *= clamp(rounded_rect_distance(position, center, panel, radius) + 0.5, 0.0, 1.0);
+    alpha *= clamp(rect_distance(position, vec2(0.0), radius) + 0.5, 0.0, 1.0);
 
     // Dither to hide 8-bit banding in the long, faint falloff.
     float noise = fract(sin(dot(position, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
@@ -44,7 +42,10 @@ void main(void) {
     cogl_color_out = vec4(0.0, 0.0, 0.0, alpha);
 }`;
 
-/** A smooth Gaussian drop shadow for a rounded rectangle, drawn around its parent. */
+/**
+ * A smooth Gaussian drop shadow for a rounded rectangle. The actor covers a
+ * canvas around the panel, so the panel can move within it without resizing.
+ */
 export class DropShadow extends St.Widget {
     static {
         GObject.registerClass({ GTypeName: uniqueTypeName('DropShadow') }, this);
@@ -59,7 +60,6 @@ export class DropShadow extends St.Widget {
         super({ style: 'background-color: black;' });
 
         this.spread = Math.ceil(3 * blur + Math.abs(offsetY));
-        this.shader.setFloat('extent', this.spread);
         this.shader.setFloat('radius', radius);
         this.shader.setFloat('blur', blur);
         this.shader.setFloat('offset_y', offsetY);
@@ -67,12 +67,14 @@ export class DropShadow extends St.Widget {
         this.add_effect(this.shader);
     }
 
-    /** Surrounds a panel occupying the given rectangle of the parent. */
-    fit(x: number, y: number, width: number, height: number): void {
-        const size: [number, number] = [width + 2 * this.spread, height + 2 * this.spread];
-
+    /** Covers a canvas occupying the given rectangle of the parent. */
+    setCanvas({ x, y, width, height }: Rect): void {
         this.set_position(x - this.spread, y - this.spread);
-        this.set_size(...size);
-        this.shader.setSize(...size);
+        this.set_size(width + 2 * this.spread, height + 2 * this.spread);
+    }
+
+    /** Casts the shadow of a panel at the given rectangle of the canvas. */
+    setPanel({ x, y, width, height }: Rect): void {
+        this.shader.setRect({ x: x + this.spread, y: y + this.spread, width, height });
     }
 }

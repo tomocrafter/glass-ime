@@ -13,8 +13,7 @@ void main(void) {
     float luma = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
     c.rgb = clamp(mix(vec3(luma), c.rgb, saturation), 0.0, c.a);
 
-    vec2 size = actor_size();
-    float d = rounded_rect_distance(actor_position(), size * 0.5, size, radius);
+    float d = rect_distance(actor_position(), vec2(0.0), radius);
 
     cogl_color_out = c * clamp(0.5 - d, 0.0, 1.0);
 }`;
