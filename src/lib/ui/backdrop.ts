@@ -47,6 +47,7 @@ export class Backdrop extends DetachedLayer {
 
     private readonly blurHost = new St.Widget({ clip_to_allocation: true });
     private readonly sources = new Clutter.Actor();
+    private readonly clones = new Map<Clutter.Actor, Clutter.Clone>();
     private readonly mask: RoundedMaskEffect;
 
     constructor(radius: number, blurRadius: number, saturation: number) {
@@ -89,13 +90,45 @@ export class Backdrop extends DetachedLayer {
             .get_window_actors()
             .filter((actor) => actor.visible && !actor.meta_window?.minimized);
 
-        this.sources.destroy_all_children();
+        const wanted = [...backgrounds, ...windows].filter(overlaps);
 
-        for (const source of [...backgrounds, ...windows].filter(overlaps)) {
-            const clone = new Clutter.Clone({ source });
-            clone.set_position(source.x, source.y);
-            clone.set_size(source.width, source.height);
+        for (const [source, clone] of this.clones) {
+            if (!wanted.includes(source)) {
+                clone.destroy();
+                this.clones.delete(source);
+            }
+        }
+
+        wanted.forEach((source, index) => this.syncClone(source, index));
+    }
+
+    /** Drops every clone while the panel is hidden, so that nothing keeps windows referenced. */
+    release(): void {
+        for (const clone of this.clones.values()) {
+            clone.destroy();
+        }
+        this.clones.clear();
+    }
+
+    private syncClone(source: Clutter.Actor, index: number): void {
+        let clone = this.clones.get(source);
+
+        if (!clone) {
+            clone = new Clutter.Clone({ source });
+            this.clones.set(source, clone);
             this.sources.add_child(clone);
+        }
+
+        if (clone.x !== source.x || clone.y !== source.y) {
+            clone.set_position(source.x, source.y);
+        }
+
+        if (clone.width !== source.width || clone.height !== source.height) {
+            clone.set_size(source.width, source.height);
+        }
+
+        if (this.sources.get_child_at_index(index) !== clone) {
+            this.sources.set_child_at_index(clone, index);
         }
     }
 

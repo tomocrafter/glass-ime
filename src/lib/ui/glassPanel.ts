@@ -187,6 +187,7 @@ export class GlassPanel extends St.Widget {
                 onComplete: () => {
                     if (!this.shown) {
                         this.hide();
+                        this.backdrop.release();
                     }
                 },
             });
