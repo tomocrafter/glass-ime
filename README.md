@@ -6,7 +6,7 @@ A GNOME Shell extension that draws the fcitx5 candidate window and the input met
 
 ## Features
 
-- **Candidate window**: the glass panel follows the cursor, and its height animates smoothly as the candidate list grows and shrinks while you type. The width snaps immediately, so text is never squeezed mid-animation.
+- **Candidate window**: the glass panel follows the cursor and smoothly grows and shrinks as the candidate list changes while you type or page through it. Text is laid out at its final size and clipped by the glass mid-animation, never ellipsized.
 
   <img src="docs/candidates.png" alt="Candidate window over a document" width="640">
 

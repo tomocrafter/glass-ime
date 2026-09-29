@@ -37,8 +37,8 @@ const lerp = (from: number, to: number, progress: number) => from + (to - from) 
  * The layers cover a canvas that holds every position of the panel during an
  * animation, with a margin for the shadow. Animating the panel only moves it
  * within the canvas, so the blur and the shadows keep their cached textures.
- * The height animates between sizes, while the width follows immediately so
- * that the content is never squeezed.
+ * The content is laid out at its final size right away and clipped to the
+ * panel as it grows or shrinks, so text is cut off rather than ellipsized.
  */
 export class GlassPanel extends St.Widget {
     static {
@@ -134,9 +134,8 @@ export class GlassPanel extends St.Widget {
         this.stopResize();
         this.box.set_size(width, height);
 
-        const from: Rect = { ...this.panel, x, width };
-        const animate =
-            this.shown && this.visible && (from.y !== next.y || from.height !== next.height);
+        const from = this.panel;
+        const animate = this.shown && this.visible;
 
         if (!animate) {
             this.setCanvas(next);
@@ -156,8 +155,9 @@ export class GlassPanel extends St.Widget {
             const progress = timeline.get_progress();
 
             this.showPanel({
-                ...next,
+                x: lerp(from.x, next.x, progress),
                 y: lerp(from.y, next.y, progress),
+                width: lerp(from.width, next.width, progress),
                 height: lerp(from.height, next.height, progress),
             });
         });
