@@ -6,7 +6,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import { Backdrop, DetachedLayer } from './backdrop.js';
 import { DropShadow, type ShadowLayer } from './dropShadow.js';
-import { type Rect, sameRect, union } from './geometry.js';
+import { type Rect, sameRect, union } from '../geometry.js';
 import { uniqueTypeName } from './typeName.js';
 
 export interface GlassPanelOptions {

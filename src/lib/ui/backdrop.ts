@@ -4,7 +4,7 @@ import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 
-import type { Rect } from './geometry.js';
+import type { Rect } from '../geometry.js';
 import { RoundedMaskEffect } from './roundedMaskEffect.js';
 import { uniqueTypeName } from './typeName.js';
 

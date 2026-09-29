@@ -1,7 +1,7 @@
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 
-import type { Rect } from './geometry.js';
+import type { Rect } from '../geometry.js';
 import { uniqueTypeName } from './typeName.js';
 
 const PRELUDE = `

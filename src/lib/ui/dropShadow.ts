@@ -1,7 +1,7 @@
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
-import type { Rect } from './geometry.js';
+import type { Rect } from '../geometry.js';
 import { PixelShaderEffect } from './pixelShaderEffect.js';
 import { uniqueTypeName } from './typeName.js';
 
