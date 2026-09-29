@@ -9,7 +9,14 @@ const TEXT_INSET = 10;
 
 /** The small "A" / "あ" badge shown when the input method changes. */
 export class ModeIndicator {
-    readonly actor = new GlassPanel({ styleClass: 'glass-ime-indicator', radius: 10 });
+    readonly actor = new GlassPanel({
+        styleClass: 'glass-ime-indicator',
+        radius: 7,
+        shadows: [
+            { blur: 0.8, offsetY: 0.5, opacity: 0.14 },
+            { blur: 4, offsetY: 2, opacity: 0.16 },
+        ],
+    });
     private readonly label = new St.Label({
         style_class: 'glass-ime-indicator-text',
         x_align: Clutter.ActorAlign.CENTER,

@@ -71,8 +71,7 @@
 }
 
 .glass-ime-indicator .glass-ime-content {
-    padding: 4px 9px;
-    min-width: 14px;
+    padding: 3px 12px;
 }
 .glass-ime-indicator-text {
     font-size: 11pt;
