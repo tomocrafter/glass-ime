@@ -14,7 +14,7 @@ import { StatusButton } from './ui/statusButton.js';
 export default class GlassIme {
     private readonly state = new PanelState();
     private readonly anchor = new CursorAnchor();
-    private readonly service = new KimpanelService((event) => this.handle(event));
+    private readonly service: KimpanelService;
     private readonly indicator = new ModeIndicator();
     private readonly candidates = new CandidatePanel({
         select: (index) => this.service.selectCandidate(index),
@@ -32,14 +32,26 @@ export default class GlassIme {
         this.candidates.actor.addToShell();
         this.indicator.actor.addToShell();
         Main.panel.addToStatusArea(uuid, this.status.button);
+
+        // Take over from fcitx5's own UI only once ours is ready.
+        try {
+            this.service = new KimpanelService((event) => this.handle(event));
+        } catch (error) {
+            this.destroyUi();
+            throw error;
+        }
     }
 
     destroy(): void {
+        this.service.destroy();
+        this.destroyUi();
+    }
+
+    private destroyUi(): void {
         if (this.laterId) {
             global.compositor.get_laters().remove(this.laterId);
         }
 
-        this.service.destroy();
         this.status.destroy();
         this.candidates.actor.destroy();
         this.indicator.actor.destroy();
