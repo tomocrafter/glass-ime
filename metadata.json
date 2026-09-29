@@ -1,10 +1,8 @@
 {
-  "uuid": "glass-ime@tomo",
-  "name": "Glass IME Panel",
-  "description": "Frosted-glass candidate window and input method indicator for fcitx5 (kimpanel protocol)",
-  "shell-version": [
-    "46"
-  ],
-  "version": 1,
-  "url": "https://github.com/tomocrafter/glass-ime"
+    "uuid": "glass-ime@tomo",
+    "name": "Glass IME Panel",
+    "description": "Frosted-glass candidate window and input method indicator for fcitx5 (kimpanel protocol)",
+    "shell-version": ["46"],
+    "version": 1,
+    "url": "https://github.com/tomocrafter/glass-ime"
 }
