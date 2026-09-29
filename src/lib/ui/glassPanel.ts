@@ -52,6 +52,8 @@ export class GlassPanel extends St.Widget {
     private readonly margin: number;
     private shown = false;
     private hideTimeoutId = 0;
+    /** Where the vertical animation is heading, to avoid restarting it with the same target. */
+    private target = { y: 0, height: 0 };
 
     constructor({
         styleClass,
@@ -130,10 +132,16 @@ export class GlassPanel extends St.Widget {
         const outerY = y - this.margin;
         const outerHeight = height + 2 * this.margin;
 
-        this.remove_transition('y');
-        this.remove_transition('height');
         this.x = x - this.margin;
         this.width = width + 2 * this.margin;
+
+        if (animate && outerY === this.target.y && outerHeight === this.target.height) {
+            return;
+        }
+
+        this.target = { y: outerY, height: outerHeight };
+        this.remove_transition('y');
+        this.remove_transition('height');
 
         if (animate) {
             this.ease({
