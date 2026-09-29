@@ -1,0 +1,75 @@
+/* 影(ガラスの下に隠れ、外側にだけ見える) */
+.glass-ime-shadow {
+  background-color: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+}
+
+/* パネル全体の文字設定(板と中身は兄弟なので親で指定する) */
+.glass-ime-panel {
+  font-family: "Noto Sans CJK JP", sans-serif;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+/* ガラス面: ぼかした背景の上に薄い色を一枚重ねるだけ。グラデーションは使わない */
+.glass-ime-surface {
+  background-color: rgba(22, 22, 26, 0.50);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.glass-ime-candidates { font-size: 11.5pt; }
+.glass-ime-candidates .glass-ime-content {
+  padding: 5px;
+  spacing: 2px;
+}
+
+.glass-ime-list { spacing: 1px; }
+.glass-ime-list.horizontal { spacing: 2px; }
+
+.glass-ime-candidate {
+  padding: 5px 14px 5px 8px;
+  border-radius: 9px;
+  spacing: 10px;
+  min-width: 96px;
+}
+.glass-ime-list.horizontal .glass-ime-candidate { min-width: 0; padding: 5px 10px 5px 8px; }
+
+.glass-ime-candidate:hover { background-color: rgba(255, 255, 255, 0.07); }
+.glass-ime-candidate.selected { background-color: rgba(255, 255, 255, 0.17); }
+
+.glass-ime-candidate-label {
+  color: rgba(255, 255, 255, 0.40);
+  font-size: 9pt;
+  min-width: 12px;
+  text-align: center;
+}
+.glass-ime-candidate.selected .glass-ime-candidate-label { color: rgba(255, 255, 255, 0.75); }
+
+.glass-ime-candidate-text { color: rgba(255, 255, 255, 0.92); }
+.glass-ime-candidate.selected .glass-ime-candidate-text { color: #ffffff; }
+
+.glass-ime-aux,
+.glass-ime-preedit {
+  padding: 3px 8px 4px 8px;
+  font-size: 9pt;
+  color: rgba(255, 255, 255, 0.50);
+}
+.glass-ime-preedit { font-size: 11.5pt; color: #ffffff; }
+
+/* 全角/半角切替時のインジケーター */
+.glass-ime-indicator .glass-ime-content {
+  padding: 4px 9px;
+  min-width: 14px;
+}
+.glass-ime-indicator-text {
+  font-size: 11pt;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* トップバーの入力モード表示 */
+.glass-ime-status {
+  font-weight: bold;
+  min-width: 18px;
+  text-align: center;
+}
