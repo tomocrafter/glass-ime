@@ -1,7 +1,7 @@
 import type Clutter from 'gi://Clutter';
 
 // @girs/gnome-shell augments '@girs/clutter-14', but the namespace lives in its submodule.
-declare module '@girs/clutter-14/clutter-14' {
+declare module '@girs/clutter-18/clutter-18' {
     namespace Clutter {
         interface EaseParams {
             duration?: number;
