@@ -5,8 +5,6 @@ import St from 'gi://St';
 import { placeNearCursor } from '../placement.js';
 import { GlassPanel } from './glassPanel.js';
 
-const TEXT_INSET = 10;
-
 /** The small "A" / "あ" badge shown when the input method changes. */
 export class ModeIndicator {
     readonly actor = new GlassPanel({
@@ -33,9 +31,7 @@ export class ModeIndicator {
         this.label.text = text;
 
         const [width, height] = this.actor.naturalSize;
-        const { x, y } = placeNearCursor(cursor, width, height, TEXT_INSET);
-
-        this.actor.moveResize(x, y, width, height);
+        this.actor.moveResize(placeNearCursor(cursor, width, height));
         this.actor.popup();
     }
 

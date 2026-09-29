@@ -4,14 +4,15 @@ import Mtk from 'gi://Mtk';
 import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import type { Rect } from './geometry.js';
 import type { SpotRect } from './kimpanel/protocol.js';
 
 const GAP = 6;
 const SCREEN_MARGIN = 8;
 
-export interface Placement {
-    x: number;
-    y: number;
+export interface Placement extends Rect {
+    /** Placed above the cursor for lack of room below, so it grows upward. */
+    above: boolean;
 }
 
 /** Converts the cursor rectangle reported by fcitx5 into stage coordinates. */
@@ -42,25 +43,21 @@ export function spotToStageRect(spot: SpotRect): Mtk.Rectangle {
 }
 
 /**
- * Places a popup below the cursor, or above it when there is no room, keeping
- * it on the cursor's monitor. `textInset` aligns the popup's text rather than
- * its edge with the cursor.
+ * Places a popup with its left edge at the cursor, below it or above it when
+ * there is no room, keeping it on the cursor's monitor.
  */
-export function placeNearCursor(
-    cursor: Mtk.Rectangle,
-    width: number,
-    height: number,
-    textInset: number,
-): Placement {
+export function placeNearCursor(cursor: Mtk.Rectangle, width: number, height: number): Placement {
     const index = global.display.get_monitor_index_for_rect(cursor);
     const monitor = Main.layoutManager.monitors[index] ?? Main.layoutManager.primaryMonitor;
 
-    let x = cursor.x - textInset;
+    let x = cursor.x;
     let y = cursor.y + cursor.height + GAP;
+    let above = false;
 
     if (monitor) {
         if (y + height > monitor.y + monitor.height - SCREEN_MARGIN) {
             y = cursor.y - height - GAP;
+            above = true;
         }
 
         const maxX = monitor.x + monitor.width - width - SCREEN_MARGIN;
@@ -68,7 +65,7 @@ export function placeNearCursor(
         y = Math.max(monitor.y + SCREEN_MARGIN, y);
     }
 
-    return { x: Math.round(x), y: Math.round(y) };
+    return { x: Math.round(x), y: Math.round(y), width, height, above };
 }
 
 function shellScale(): number {

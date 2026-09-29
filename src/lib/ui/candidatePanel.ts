@@ -13,8 +13,6 @@ export interface CandidatePanelActions {
     pageDown(): void;
 }
 
-const TEXT_INSET = 34;
-
 /**
  * The candidate window. fcitx5 re-sends the whole panel on every keystroke and
  * cursor move, so unchanged views are skipped and widgets are reused.
@@ -56,9 +54,7 @@ export class CandidatePanel {
         }
 
         const [width, height] = this.size;
-        const { x, y } = placeNearCursor(cursor, width, height, TEXT_INSET);
-
-        this.actor.moveResize(x, y, width, height);
+        this.actor.moveResize(placeNearCursor(cursor, width, height));
         this.actor.popup();
     }
 

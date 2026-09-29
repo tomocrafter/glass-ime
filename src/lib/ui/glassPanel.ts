@@ -7,6 +7,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Backdrop, DetachedLayer } from './backdrop.js';
 import { DropShadow, type ShadowLayer } from './dropShadow.js';
 import { type Rect, sameRect, union } from '../geometry.js';
+import type { Placement } from '../placement.js';
 import { uniqueTypeName } from './typeName.js';
 
 export interface GlassPanelOptions {
@@ -123,8 +124,12 @@ export class GlassPanel extends St.Widget {
         return [Math.ceil(width), Math.ceil(height)];
     }
 
-    /** Places the panel at the given stage rectangle. */
-    moveResize(x: number, y: number, width: number, height: number): void {
+    /**
+     * Places the panel. It jumps to a new position right away and only its
+     * size animates, from the corner next to the cursor.
+     */
+    moveResize(placement: Placement): void {
+        const { x, y, width, height, above } = placement;
         const next: Rect = { x, y, width, height };
 
         if (this.canvas && sameRect(next, this.target ?? this.panel)) {
@@ -134,8 +139,13 @@ export class GlassPanel extends St.Widget {
         this.stopResize();
         this.box.set_size(width, height);
 
-        const from = this.panel;
-        const animate = this.shown && this.visible;
+        const from: Rect = {
+            x,
+            y: above ? y + height - this.panel.height : y,
+            width: this.panel.width,
+            height: this.panel.height,
+        };
+        const animate = this.shown && this.visible && !sameRect(from, next);
 
         if (!animate) {
             this.setCanvas(next);
