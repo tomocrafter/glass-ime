@@ -40,9 +40,14 @@ const EMPTY_TABLE: LookupTable = {
 
 const INITIAL_SPOT: SpotRect = { x: 0, y: 0, width: 0, height: 0, relative: false, scale: 1 };
 
+const isEmptySpot = ({ x, y, width, height }: SpotRect) =>
+    x === 0 && y === 0 && width === 0 && height === 0;
+
 /** Accumulates kimpanel events and decides what the panel should show. */
 export class PanelState {
     spot = INITIAL_SPOT;
+    /** Focus moved and the app has not reported its caret yet. */
+    caretPending = false;
     imLabel = '';
     private table = EMPTY_TABLE;
     private aux = '';
@@ -72,7 +77,11 @@ export class PanelState {
                 this.table = event.table;
                 break;
             case 'spot':
-                this.spot = event.spot;
+                // fcitx5 reports an empty rectangle on focus-in, before the app reports its caret.
+                this.caretPending = isEmptySpot(event.spot);
+                if (!this.caretPending) {
+                    this.spot = event.spot;
+                }
                 break;
             case 'imProperty':
                 this.imLabel = displayLabel(event.property);
@@ -109,6 +118,7 @@ export class PanelState {
 
     private reset(): void {
         this.spot = INITIAL_SPOT;
+        this.caretPending = false;
         this.imLabel = '';
         this.table = EMPTY_TABLE;
         this.aux = '';

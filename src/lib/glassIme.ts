@@ -12,6 +12,9 @@ import { DescriptionPanel } from './ui/descriptionPanel.js';
 import { ModeIndicator } from './ui/modeIndicator.js';
 import { StatusButton } from './ui/statusButton.js';
 
+/** Some apps never report their caret; show at the last known position after this. */
+const CARET_WAIT_MS = 150;
+
 export default class GlassIme {
     private readonly state = new PanelState();
     private readonly anchor = new CursorAnchor();
@@ -29,6 +32,7 @@ export default class GlassIme {
         configure: () => this.service.configure(),
     });
     private laterId = 0;
+    private caretTimeoutId = 0;
 
     constructor(uuid: string) {
         this.candidates.actor.addToShell();
@@ -54,6 +58,8 @@ export default class GlassIme {
         if (this.laterId) {
             global.compositor.get_laters().remove(this.laterId);
         }
+
+        this.stopWaitingForCaret();
 
         this.status.destroy();
         this.candidates.actor.destroy();
@@ -93,6 +99,15 @@ export default class GlassIme {
 
     private render(): void {
         const view = this.state.view();
+
+        // Right after focus moves, wait briefly for the app's caret instead of
+        // showing at the previous window's position and jumping.
+        if (view.kind !== 'hidden' && this.state.caretPending) {
+            this.waitForCaret();
+            return;
+        }
+        this.stopWaitingForCaret();
+
         const cursor = spotToStageRect(this.state.spot);
         const content =
             view.kind === 'candidates' ? view.candidates.map((c) => c.text).join('\n') : '';
@@ -118,5 +133,26 @@ export default class GlassIme {
             this.candidates.hide();
             this.description.hide();
         }
+    }
+
+    private waitForCaret(): void {
+        if (this.caretTimeoutId) {
+            return;
+        }
+
+        this.caretTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, CARET_WAIT_MS, () => {
+            this.caretTimeoutId = 0;
+            this.state.caretPending = false;
+            this.scheduleRender();
+
+            return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    private stopWaitingForCaret(): void {
+        if (this.caretTimeoutId) {
+            GLib.source_remove(this.caretTimeoutId);
+        }
+        this.caretTimeoutId = 0;
     }
 }
