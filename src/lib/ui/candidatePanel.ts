@@ -2,8 +2,9 @@ import Clutter from 'gi://Clutter';
 import type Mtk from 'gi://Mtk';
 import St from 'gi://St';
 
-import type { Candidate, CandidatesView } from '../panelState.js';
+import type { CandidatesView } from '../panelState.js';
 import { placeNearCursor } from '../placement.js';
+import { CandidateRow, setText } from './candidateRow.js';
 import { GlassPanel } from './glassPanel.js';
 
 export interface CandidatePanelActions {
@@ -14,10 +15,24 @@ export interface CandidatePanelActions {
 
 const TEXT_INSET = 34;
 
+/**
+ * The candidate window. fcitx5 re-sends the whole panel on every keystroke and
+ * cursor move, so unchanged views are skipped and widgets are reused.
+ */
 export class CandidatePanel {
     readonly actor = new GlassPanel({ styleClass: 'glass-ime-candidates' });
+    private readonly preedit = new St.Label({ style_class: 'glass-ime-preedit' });
+    private readonly notes = new St.BoxLayout({ vertical: true });
+    private readonly list = new St.BoxLayout({ style_class: 'glass-ime-list' });
+    private readonly rows: CandidateRow[] = [];
+    private renderedView = '';
+    private size: [number, number] = [0, 0];
 
     constructor(private readonly actions: CandidatePanelActions) {
+        this.actor.box.add_child(this.preedit);
+        this.actor.box.add_child(this.notes);
+        this.actor.box.add_child(this.list);
+
         this.actor.box.connect('scroll-event', (_actor: Clutter.Actor, event: Clutter.Event) => {
             const direction = event.get_scroll_direction();
 
@@ -32,9 +47,15 @@ export class CandidatePanel {
     }
 
     show(view: CandidatesView, cursor: Mtk.Rectangle): void {
-        this.render(view);
+        const key = JSON.stringify(view);
 
-        const [width, height] = this.actor.naturalSize;
+        if (key !== this.renderedView) {
+            this.render(view);
+            this.renderedView = key;
+            this.size = this.actor.naturalSize;
+        }
+
+        const [width, height] = this.size;
         const { x, y } = placeNearCursor(cursor, width, height, TEXT_INSET);
 
         this.actor.moveResize(x, y, width, height);
@@ -46,60 +67,46 @@ export class CandidatePanel {
     }
 
     private render(view: CandidatesView): void {
-        const box = this.actor.box;
-        box.destroy_all_children();
+        setText(this.preedit, view.preedit ?? '');
+        this.preedit.visible = view.preedit !== null;
 
-        if (view.preedit) {
-            box.add_child(new St.Label({ style_class: 'glass-ime-preedit', text: view.preedit }));
+        this.renderNotes(view.notes);
+
+        this.list.vertical = !view.horizontal;
+        if (view.horizontal) {
+            this.list.add_style_class_name('horizontal');
+        } else {
+            this.list.remove_style_class_name('horizontal');
         }
 
-        for (const note of view.notes) {
-            box.add_child(new St.Label({ style_class: 'glass-ime-note', text: note }));
+        while (this.rows.length < view.candidates.length) {
+            const row = new CandidateRow((index) => this.actions.select(index));
+            this.rows.push(row);
+            this.list.add_child(row.actor);
         }
 
-        const list = new St.BoxLayout({
-            style_class: view.horizontal ? 'glass-ime-list horizontal' : 'glass-ime-list',
-            vertical: !view.horizontal,
+        this.rows.forEach((row, index) => {
+            const candidate = view.candidates[index];
+
+            row.actor.visible = candidate !== undefined;
+            if (candidate) {
+                row.update(candidate, candidate.index === view.cursor);
+            }
         });
-
-        for (const candidate of view.candidates) {
-            list.add_child(this.createRow(candidate, candidate.index === view.cursor));
-        }
-
-        box.add_child(list);
     }
 
-    private createRow({ index, label, text }: Candidate, selected: boolean): St.BoxLayout {
-        const row = new St.BoxLayout({
-            style_class: selected ? 'glass-ime-candidate selected' : 'glass-ime-candidate',
-            reactive: true,
-            track_hover: true,
-        });
-
-        if (label) {
-            row.add_child(
-                new St.Label({
-                    style_class: 'glass-ime-candidate-label',
-                    text: label,
-                    y_align: Clutter.ActorAlign.CENTER,
-                }),
-            );
+    private renderNotes(notes: string[]): void {
+        while (this.notes.get_n_children() < notes.length) {
+            this.notes.add_child(new St.Label({ style_class: 'glass-ime-note' }));
         }
 
-        row.add_child(
-            new St.Label({
-                style_class: 'glass-ime-candidate-text',
-                text,
-                y_align: Clutter.ActorAlign.CENTER,
-            }),
-        );
+        this.notes.get_children().forEach((child, index) => {
+            const note = notes[index];
 
-        row.connect('button-release-event', () => {
-            this.actions.select(index);
-
-            return Clutter.EVENT_STOP;
+            child.visible = note !== undefined;
+            if (child instanceof St.Label && note !== undefined) {
+                setText(child, note);
+            }
         });
-
-        return row;
     }
 }
