@@ -18,7 +18,7 @@ export class CandidatePanel {
     readonly actor = new GlassPanel({ styleClass: 'glass-ime-candidates' });
 
     constructor(private readonly actions: CandidatePanelActions) {
-        this.actor.connect('scroll-event', (_actor: Clutter.Actor, event: Clutter.Event) => {
+        this.actor.box.connect('scroll-event', (_actor: Clutter.Actor, event: Clutter.Event) => {
             const direction = event.get_scroll_direction();
 
             if (direction === Clutter.ScrollDirection.UP) {

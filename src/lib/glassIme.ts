@@ -27,8 +27,8 @@ export default class GlassIme {
     private laterId = 0;
 
     constructor(uuid: string) {
-        Main.layoutManager.addTopChrome(this.candidates.actor);
-        Main.layoutManager.addTopChrome(this.indicator.actor);
+        this.candidates.actor.addToShell();
+        this.indicator.actor.addToShell();
         Main.panel.addToStatusArea(uuid, this.status.button);
     }
 
