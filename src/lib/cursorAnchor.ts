@@ -12,20 +12,25 @@ const sameSpot = (a: SpotRect, b: SpotRect) =>
  * Chooses where to anchor the candidate list.
  *
  * Some apps report the caret late. Cancelling a conversion, for example,
- * brings the list back while the app still reports the caret at the start of
- * the converted segment, and only a moment later at the end of the text. So
- * when the list reappears shortly after hiding and the caret moved meanwhile,
- * it stays where it was until the app reports a new position.
+ * brings the same list back while the app still reports the caret at the start
+ * of the converted segment, and only a moment later at the end of the text. So
+ * when the same list reappears shortly after hiding and the caret moved
+ * meanwhile, it stays where it was until the app reports a new position. A
+ * different list means a new composition, whose caret is already right.
  */
 export class CursorAnchor {
     private visible = false;
     private hiddenAt = 0;
     private lastShown: SpotRect | null = null;
+    private lastContent = '';
     /** The stale caret we are ignoring, and the position shown instead. */
     private hold: { stale: SpotRect; shown: SpotRect } | null = null;
 
-    /** The spot to place the candidates at, given the latest one reported. */
-    resolve(spot: SpotRect, visible: boolean): SpotRect {
+    /**
+     * The spot to place the candidates at, given the latest one reported.
+     * `content` identifies the list shown, to tell a restored list from a new one.
+     */
+    resolve(spot: SpotRect, visible: boolean, content: string): SpotRect {
         const now = GLib.get_monotonic_time() / 1000;
 
         if (!visible) {
@@ -38,10 +43,12 @@ export class CursorAnchor {
             return spot;
         }
 
-        const reappearing = !this.visible && now - this.hiddenAt < REAPPEAR_MS;
+        const restored =
+            !this.visible && now - this.hiddenAt < REAPPEAR_MS && content === this.lastContent;
         this.visible = true;
+        this.lastContent = content;
 
-        if (reappearing && this.lastShown && !sameSpot(spot, this.lastShown)) {
+        if (restored && this.lastShown && !sameSpot(spot, this.lastShown)) {
             this.hold = { stale: spot, shown: this.lastShown };
         }
 

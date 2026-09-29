@@ -90,8 +90,10 @@ export default class GlassIme {
     private render(): void {
         const view = this.state.view();
         const cursor = spotToStageRect(this.state.spot);
+        const content =
+            view.kind === 'candidates' ? view.candidates.map((c) => c.text).join('\n') : '';
         const anchor = spotToStageRect(
-            this.anchor.resolve(this.state.spot, view.kind === 'candidates'),
+            this.anchor.resolve(this.state.spot, view.kind === 'candidates', content),
         );
 
         if (view.kind === 'indicator') {
