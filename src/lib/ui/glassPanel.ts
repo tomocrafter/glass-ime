@@ -68,6 +68,7 @@ export class GlassPanel extends St.Widget {
     private resize: Clutter.Timeline | null = null;
     private shown = false;
     private fadeId = 0;
+    private unredirectDisabled = false;
     private hideTimeoutId = 0;
 
     constructor({
@@ -103,6 +104,7 @@ export class GlassPanel extends St.Widget {
         this.connect('destroy', () => {
             this.cancelHide();
             this.stopResize();
+            this.allowUnredirect(true);
         });
     }
 
@@ -196,6 +198,7 @@ export class GlassPanel extends St.Widget {
             this.translation_y = 4;
         }
 
+        this.allowUnredirect(false);
         this.show();
         this.fade(255, SHOW_MS, Clutter.AnimationMode.EASE_OUT_CUBIC);
     }
@@ -211,6 +214,7 @@ export class GlassPanel extends St.Widget {
             this.fade(0, HIDE_MS, Clutter.AnimationMode.EASE_OUT_QUAD, () => {
                 if (!this.shown) {
                     this.hide();
+                    this.allowUnredirect(true);
                     this.backdrop.release();
                     this.canvas = null;
                 }
@@ -295,6 +299,24 @@ export class GlassPanel extends St.Widget {
         this.surface.set_size(local.width, local.height);
         this.box.set_position(local.x, local.y);
         this.contentLayer.set_clip(local.x, local.y, local.width, local.height);
+    }
+
+    /**
+     * A window covering its whole monitor, such as a maximized terminal on a
+     * monitor without the top bar, is scanned out directly and would hide the
+     * panel, so direct scanout is disabled while the panel shows.
+     */
+    private allowUnredirect(allow: boolean): void {
+        if (allow === !this.unredirectDisabled) {
+            return;
+        }
+
+        if (allow) {
+            global.compositor.enable_unredirect();
+        } else {
+            global.compositor.disable_unredirect();
+        }
+        this.unredirectDisabled = !allow;
     }
 
     private stopResize(): void {
