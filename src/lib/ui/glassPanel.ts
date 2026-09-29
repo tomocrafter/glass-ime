@@ -30,6 +30,9 @@ const HIDE_MS = 120;
 /** fcitx5 often hides and reshows the panel between keystrokes; don't flicker. */
 const HIDE_DELAY_MS = 60;
 
+/** Clutter.OffscreenRedirect has no member for "never": it is the empty set of flags. */
+const NO_REDIRECT = Clutter.OffscreenRedirect.ALWAYS & ~Clutter.OffscreenRedirect.ALWAYS;
+
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 
 /**
@@ -64,6 +67,7 @@ export class GlassPanel extends St.Widget {
     private target: Rect | null = null;
     private resize: Clutter.Timeline | null = null;
     private shown = false;
+    private fadeId = 0;
     private hideTimeoutId = 0;
 
     constructor({
@@ -77,8 +81,6 @@ export class GlassPanel extends St.Widget {
             style_class: `glass-ime-panel ${styleClass}`,
             visible: false,
             opacity: 0,
-            // Fade the composited panel as one image, not each layer on its own.
-            offscreen_redirect: Clutter.OffscreenRedirect.AUTOMATIC_FOR_OPACITY,
         });
 
         this.shadows = shadows.map((shadow) => new DropShadow(radius, shadow));
@@ -195,12 +197,7 @@ export class GlassPanel extends St.Widget {
         }
 
         this.show();
-        this.ease({
-            opacity: 255,
-            translation_y: 0,
-            duration: SHOW_MS,
-            mode: Clutter.AnimationMode.EASE_OUT_CUBIC,
-        });
+        this.fade(255, SHOW_MS, Clutter.AnimationMode.EASE_OUT_CUBIC);
     }
 
     popdown(): void {
@@ -211,20 +208,47 @@ export class GlassPanel extends St.Widget {
         this.hideTimeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HIDE_DELAY_MS, () => {
             this.hideTimeoutId = 0;
             this.shown = false;
-            this.ease({
-                opacity: 0,
-                duration: HIDE_MS,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                onComplete: () => {
-                    if (!this.shown) {
-                        this.hide();
-                        this.backdrop.release();
-                        this.canvas = null;
-                    }
-                },
+            this.fade(0, HIDE_MS, Clutter.AnimationMode.EASE_OUT_QUAD, () => {
+                if (!this.shown) {
+                    this.hide();
+                    this.backdrop.release();
+                    this.canvas = null;
+                }
             });
 
             return GLib.SOURCE_REMOVE;
+        });
+    }
+
+    /**
+     * Fades the panel as one composited image, so its layers don't show
+     * through each other. The redirection is dropped once the fade ends:
+     * GNOME 50 otherwise keeps painting the stale image after the panel grows.
+     */
+    private fade(
+        opacity: number,
+        duration: number,
+        mode: Clutter.AnimationMode,
+        onComplete?: () => void,
+    ): void {
+        const fadeId = ++this.fadeId;
+        this.offscreen_redirect = Clutter.OffscreenRedirect.AUTOMATIC_FOR_OPACITY;
+
+        this.ease({
+            opacity,
+            translation_y: 0,
+            duration,
+            mode,
+            onStopped: (finished: boolean) => {
+                if (fadeId !== this.fadeId) {
+                    return;
+                }
+
+                this.offscreen_redirect = NO_REDIRECT;
+                if (finished) {
+                    onComplete?.();
+                }
+            },
         });
     }
 
